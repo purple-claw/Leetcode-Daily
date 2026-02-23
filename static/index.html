@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeetCode Daily Series</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="header-icon">⚡</div>
+                <div class="header-text">
+                    <h1>LeetCode Daily</h1>
+                    <p>Browse, upload, and explore optimised LeetCode problem solutions</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container main-container">
+        <!-- Statistics Bar -->
+        <div class="stats-bar" id="stats-bar">
+            <div class="stat-box">
+                <div class="stat-value" id="stat-total">0</div>
+                <div class="stat-label">TOTAL</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value stat-easy" id="stat-easy">0</div>
+                <div class="stat-label">EASY</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value stat-medium" id="stat-medium">0</div>
+                <div class="stat-label">MEDIUM</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value stat-hard" id="stat-hard">0</div>
+                <div class="stat-label">HARD</div>
+            </div>
+        </div>
+
+        <!-- Filters and Upload -->
+        <div class="filters-section">
+            <div class="filters-row">
+                <input type="text" id="search-input" class="filter-input" placeholder="Search by title, number, or tag...">
+                
+                <select id="difficulty-filter" class="filter-select">
+                    <option value="All">All Difficulties</option>
+                    <option value="Easy">Easy</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Hard">Hard</option>
+                </select>
+                
+                <select id="tag-filter" class="filter-select">
+                    <option value="">All Tags</option>
+                </select>
+                
+                <select id="sort-select" class="filter-select">
+                    <option value="number_asc">Number ↑</option>
+                    <option value="number_desc">Number ↓</option>
+                    <option value="difficulty_asc">Difficulty ↑</option>
+                    <option value="difficulty_desc">Difficulty ↓</option>
+                    <option value="date_desc">Date ↓</option>
+                </select>
+                
+                <label for="file-upload" class="upload-btn">
+                    📤 Upload MD Files
+                    <input type="file" id="file-upload" multiple accept=".md" style="display: none;">
+                </label>
+            </div>
+        </div>
+
+        <!-- Upload Status -->
+        <div id="upload-status" class="upload-status" style="display: none;"></div>
+
+        <!-- Problems Grid / Detail View -->
+        <div id="problems-container">
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" id="pagination" style="display: none;">
+            <button id="prev-btn" class="pagination-btn">← Prev</button>
+            <span id="page-info" class="page-info"></span>
+            <button id="next-btn" class="pagination-btn">Next →</button>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loading" class="loading" style="display: none;">
+        <div class="spinner"></div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

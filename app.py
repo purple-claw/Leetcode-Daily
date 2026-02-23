@@ -2,7 +2,6 @@ import re
 import hashlib
 from pathlib import Path
 from datetime import date
-
 import streamlit as st
 import yaml
 
@@ -308,9 +307,10 @@ def _infer_title(body: str, filename: str) -> str:
 
 @st.cache_data(show_spinner=False)
 def load_bundled_problems() -> list[dict]:
-    """Load all .md files shipped in the problems/ directory."""
+    """Load all .md files shipped in the problems/ directory and subdirectories."""
     problems = []
     if PDIR.exists():
+        # Load from root problems/ directory
         for path in sorted(PDIR.glob("*.md")):
             try:
                 raw = path.read_text(encoding="utf-8")
@@ -318,6 +318,17 @@ def load_bundled_problems() -> list[dict]:
                 problems.append(p)
             except Exception:
                 pass
+        
+        # Load from subdirectories (tag-based folders)
+        for subdir in PDIR.iterdir():
+            if subdir.is_dir():
+                for path in sorted(subdir.glob("*.md")):
+                    try:
+                        raw = path.read_text(encoding="utf-8")
+                        p = parse_markdown(raw, path.name)
+                        problems.append(p)
+                    except Exception:
+                        pass
     return problems
 
 
@@ -332,6 +343,90 @@ def load_uploaded_problems(uploaded_files) -> list[dict]:
         except Exception:
             pass
     return problems
+
+
+def _generate_markdown_with_frontmatter(problem_data: dict) -> str:
+    """Generate a properly formatted markdown file with YAML front-matter."""
+    # Build front-matter
+    frontmatter = "---\n"
+    frontmatter += f"title: \"{problem_data.get('title', 'Untitled')}\"\n"
+    
+    if problem_data.get('number'):
+        frontmatter += f"number: {problem_data['number']}\n"
+    
+    frontmatter += f"difficulty: \"{problem_data.get('difficulty', 'Unknown')}\"\n"
+    
+    if problem_data.get('tags'):
+        tags_yaml = "[" + ", ".join(f'\"{tag}\"' for tag in problem_data['tags']) + "]"
+        frontmatter += f"tags: {tags_yaml}\n"
+    
+    if problem_data.get('date'):
+        frontmatter += f"date: \"{problem_data['date']}\"\n"
+    else:
+        from datetime import datetime
+        frontmatter += f"date: \"{datetime.now().strftime('%Y-%m-%d')}\"\n"
+    
+    if problem_data.get('url'):
+        frontmatter += f"url: \"{problem_data['url']}\"\n"
+    
+    frontmatter += "---\n\n"
+    
+    # Add body content
+    content = frontmatter + problem_data.get('body', '')
+    return content
+
+
+def save_problem_to_disk(problem_data: dict) -> str:
+    """Save a problem to disk in the appropriate tag directory.
+    
+    Returns the path where the file was saved.
+    """
+    # Determine directory based on primary tag
+    tags = problem_data.get('tags', [])
+    
+    # Use first tag as primary directory, or 'Uncategorized' if no tags
+    if tags:
+        # Map common tag variations to existing directories
+        tag_mapping = {
+            'Hash Table': 'Array',
+            'Dynamic Programming': 'Dp',
+            'Two Pointers': 'TwoPointers',
+            'Linked List': 'LinkedList',
+            'Bit Manipulation': 'BitManipulation',
+            'Binary Tree': 'Trees',
+            'Tree': 'Trees',
+            'String': 'Strings',
+            'Trie': 'Tries',
+        }
+        
+        primary_tag = tags[0]
+        dir_name = tag_mapping.get(primary_tag, primary_tag.replace(' ', ''))
+    else:
+        dir_name = 'Uncategorized'
+    
+    # Create directory if it doesn't exist
+    target_dir = PDIR / dir_name
+    target_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Generate filename
+    number = problem_data.get('number')
+    title_slug = _slugify(problem_data.get('title', 'problem'))
+    
+    if number:
+        filename = f"{number:04d}-{title_slug}.md"
+    else:
+        filename = f"{title_slug}.md"
+    
+    # Full path
+    file_path = target_dir / filename
+    
+    # Generate content with front-matter
+    content = _generate_markdown_with_frontmatter(problem_data)
+    
+    # Write to file
+    file_path.write_text(content, encoding='utf-8')
+    
+    return str(file_path)
 
 
 # ---------------------------------------------------------------------------
@@ -454,14 +549,28 @@ def render_sidebar(all_problems: list[dict]):
             # Merge, avoiding duplicates by slug
             existing_slugs = {p["slug"] for p in st.session_state.uploaded_problems}
             added = 0
+            saved_paths = []
+            
             for p in new_problems:
                 if p["slug"] not in existing_slugs:
-                    st.session_state.uploaded_problems.append(p)
-                    existing_slugs.add(p["slug"])
-                    added += 1
+                    # Save to disk
+                    try:
+                        file_path = save_problem_to_disk(p)
+                        saved_paths.append(file_path)
+                        st.session_state.uploaded_problems.append(p)
+                        existing_slugs.add(p["slug"])
+                        added += 1
+                    except Exception as e:
+                        st.error(f"Failed to save {p.get('title', 'problem')}: {str(e)}")
+            
             if added:
-                st.success(f"Added {added} problem(s)!")
+                st.success(f"✅ Added and saved {added} problem(s)!")
+                with st.expander("View saved locations"):
+                    for path in saved_paths:
+                        st.code(path, language="text")
                 st.session_state.page = 1
+                # Clear cache to reload bundled problems
+                st.cache_data.clear()
 
         st.markdown("---")
 
