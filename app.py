@@ -1,19 +1,3 @@
-"""
-LeetCode Daily Competitive Series — Streamlit Web App
-======================================================
-A single-page application for browsing, uploading, and classifying
-LeetCode problem explanations written in Markdown.
-
-Features:
-  • Upload one or more .md files via drag-and-drop
-  • Auto-parse YAML front-matter (title, number, difficulty, tags, date, url)
-  • Intelligent auto-classification when front-matter is absent
-  • Filter by difficulty, topic tags, and free-text search
-  • Paginated problem card grid
-  • Full-detail view with permalink (URL query param ?problem=<slug>)
-  • Clean, responsive UI with custom CSS
-"""
-
 import re
 import hashlib
 from pathlib import Path
@@ -22,15 +6,13 @@ from datetime import date
 import streamlit as st
 import yaml
 
-# ---------------------------------------------------------------------------
-# Constants
-# ---------------------------------------------------------------------------
+# Constants - Like your Ex Haha
 
-PROBLEMS_DIR = Path(__file__).parent / "problems"
-ITEMS_PER_PAGE = 9
+PDIR = Path(__file__).parent / "problems"
+ITMS = 9
 
-DIFFICULTY_ORDER = {"Easy": 0, "Medium": 1, "Hard": 2, "Unknown": 3}
-DIFFICULTY_COLORS = {
+DIFFODR = {"Easy": 0, "Medium": 1, "Hard": 2, "Unknown": 3}
+DIFFCOL = {
     "Easy": "#00b8a3",
     "Medium": "#ffa116",
     "Hard": "#ff375f",
@@ -229,7 +211,6 @@ def _slugify(text: str) -> str:
 
 
 def _detect_difficulty(content: str) -> str:
-    """Guess difficulty from content keywords."""
     content_lower = content.lower()
     for word in ["hard", "difficult", "complex"]:
         if word in content_lower:
@@ -244,7 +225,6 @@ def _detect_difficulty(content: str) -> str:
 
 
 def _detect_tags(content: str) -> list[str]:
-    """Extract known LeetCode tags mentioned in the content."""
     found = []
     content_lower = content.lower()
     for tag in KNOWN_TAGS:
@@ -254,7 +234,6 @@ def _detect_tags(content: str) -> list[str]:
 
 
 def _extract_number(filename: str, content: str) -> int | None:
-    """Try to extract the problem number from filename or first heading."""
     # From filename like "0001-two-sum.md" or "problem-42-title.md"
     m = re.search(r"(?:^|[-_])0*(\d+)", filename)
     if m:
@@ -267,16 +246,8 @@ def _extract_number(filename: str, content: str) -> int | None:
 
 
 def parse_markdown(raw: str, filename: str = "") -> dict:
-    """
-    Parse a markdown string into a problem dict.
-
-    Supports YAML front-matter delimited by ``---`` blocks.
-    Falls back to intelligent auto-classification when front-matter is absent.
-    """
     meta: dict = {}
     body = raw
-
-    # Try to extract YAML front-matter
     fm_match = re.match(r"^---\s*\n(.*?)\n---\s*\n", raw, re.DOTALL)
     if fm_match:
         try:
@@ -308,7 +279,7 @@ def parse_markdown(raw: str, filename: str = "") -> dict:
         "slug": slug,
         "title": title,
         "number": number,
-        "difficulty": difficulty if difficulty in DIFFICULTY_COLORS else "Unknown",
+        "difficulty": difficulty if difficulty in DIFFCOL else "Unknown",
         "tags": tags if isinstance(tags, list) else [],
         "date": problem_date,
         "url": url,
@@ -339,8 +310,8 @@ def _infer_title(body: str, filename: str) -> str:
 def load_bundled_problems() -> list[dict]:
     """Load all .md files shipped in the problems/ directory."""
     problems = []
-    if PROBLEMS_DIR.exists():
-        for path in sorted(PROBLEMS_DIR.glob("*.md")):
+    if PDIR.exists():
+        for path in sorted(PDIR.glob("*.md")):
             try:
                 raw = path.read_text(encoding="utf-8")
                 p = parse_markdown(raw, path.name)
@@ -466,11 +437,11 @@ def render_metrics(problems: list[dict]):
 def render_sidebar(all_problems: list[dict]):
     """Render filters and uploader in the sidebar."""
     with st.sidebar:
-        st.markdown("## ⚡ LeetCode Series")
+        st.markdown("## LeetCode Series")
         st.markdown("---")
 
         # ── Upload ──────────────────────────────────────────────
-        st.markdown("### 📤 Upload Problems")
+        st.markdown("### Upload Problems")
         st.caption("Drop one or more `.md` files to add them.")
         uploaded = st.file_uploader(
             "Upload .md files",
@@ -495,7 +466,7 @@ def render_sidebar(all_problems: list[dict]):
         st.markdown("---")
 
         # ── Filters ─────────────────────────────────────────────
-        st.markdown("### 🔍 Filters")
+        st.markdown("### Filters")
 
         st.session_state.search_query = st.text_input(
             "Search by title or number",
@@ -529,7 +500,7 @@ def render_sidebar(all_problems: list[dict]):
             ["Number ↑", "Number ↓", "Difficulty ↑", "Difficulty ↓", "Date ↓"],
         )
 
-        if st.button("🔄 Reset Filters", use_container_width=True):
+        if st.button(" Reset Filters", use_container_width=True):
             st.session_state.search_query = ""
             st.session_state.difficulty_filter = "All"
             st.session_state.tag_filter = []
@@ -575,10 +546,10 @@ def _sort_problems(problems: list[dict], sort_key: str) -> list[dict]:
     if sort_key == "Number ↓":
         return sorted(problems, key=lambda p: (p["number"] or 0), reverse=True)
     if sort_key == "Difficulty ↑":
-        return sorted(problems, key=lambda p: DIFFICULTY_ORDER.get(p["difficulty"], 3))
+        return sorted(problems, key=lambda p: DIFFODR.get(p["difficulty"], 3))
     if sort_key == "Difficulty ↓":
         return sorted(
-            problems, key=lambda p: DIFFICULTY_ORDER.get(p["difficulty"], 3), reverse=True
+            problems, key=lambda p: DIFFODR.get(p["difficulty"], 3), reverse=True
         )
     if sort_key == "Date ↓":
         return sorted(problems, key=lambda p: p["date"] or "", reverse=True)
@@ -591,7 +562,7 @@ def render_problem_card(problem: dict, col):
     card_cls = f"card-{diff.lower()}"
     num_str = f"#{problem['number']}" if problem["number"] else ""
     tags_html = _tag_badges(problem.get("tags", []))
-    date_str = f"📅 {problem['date']}" if problem.get("date") else ""
+    date_str = f"{problem['date']}" if problem.get("date") else ""
 
     card_html = f"""
 <div class="problem-card {card_cls}">
@@ -612,7 +583,7 @@ def render_problem_card(problem: dict, col):
 
 def render_pagination(total: int) -> int:
     """Render pagination controls; returns the (possibly updated) page number."""
-    total_pages = max(1, (total + ITEMS_PER_PAGE - 1) // ITEMS_PER_PAGE)
+    total_pages = max(1, (total + ITMS - 1) // ITMS)
     page = st.session_state.page
 
     # Clamp
@@ -653,8 +624,8 @@ def render_list_view(problems: list[dict], sort_key: str):
 
     page = render_pagination(len(sorted_problems))
 
-    start = (page - 1) * ITEMS_PER_PAGE
-    page_items = sorted_problems[start: start + ITEMS_PER_PAGE]
+    start = (page - 1) * ITMS
+    page_items = sorted_problems[start: start + ITMS]
 
     # 3-column grid
     for row_start in range(0, len(page_items), 3):
@@ -666,10 +637,10 @@ def render_list_view(problems: list[dict], sort_key: str):
 def render_detail_view(problem: dict):
     """Render the full problem detail / solution page."""
     diff = problem["difficulty"]
-    diff_color = DIFFICULTY_COLORS.get(diff, "#888")
+    diff_color = DIFFCOL.get(diff, "#888")
     num_str = f"#{problem['number']} · " if problem["number"] else ""
     tags_html = _tag_badges(problem.get("tags", []), max_tags=10)
-    date_str = f"📅 {problem['date']}" if problem.get("date") else ""
+    date_str = f"{problem['date']}" if problem.get("date") else ""
 
     # Permalink
     permalink = f"?problem={problem['slug']}"
@@ -692,7 +663,7 @@ def render_detail_view(problem: dict):
     <span class="badge" style="background:{DIFFICULTY_BG.get(diff,'#eee')}; color:{diff_color}; font-weight:700">{diff}</span>
     {tags_html}
   </div>
-  <div class="permalink-box">🔗 Permalink: {permalink}</div>
+  <div class="permalink-box">Permalink: {permalink}</div>
 </div>
 """,
         unsafe_allow_html=True,
@@ -701,7 +672,7 @@ def render_detail_view(problem: dict):
     # LeetCode link
     if problem.get("url"):
         st.markdown(
-            f"[🔗 View on LeetCode]({problem['url']})",
+            f"[ View on LeetCode]({problem['url']})",
             help="Opens the original LeetCode problem page",
         )
 
