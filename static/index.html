@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LeetCode Daily Series</title>
+    <title>LeetCode Daily</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
@@ -11,11 +14,16 @@
     <header class="header">
         <div class="container">
             <div class="header-content">
-                <div class="header-icon">⚡</div>
                 <div class="header-text">
-                    <h1>LeetCode Daily</h1>
+                    <h1 id="main-title">Not your typical Leetcode</h1>
+                    <p>A simpler Version, Built for myself to revise before Interviews(I Know I'm Not Haha..), But later decided to Give it to others, Ofcourse for Free</p>
                     <p>Browse, upload, and explore optimised LeetCode problem solutions</p>
+                    <p class="credits">Thanks to Claude Sonnet, for reducing my Headaches with the Backend Filter Implementation</p>
                 </div>
+                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+                    <span class="theme-icon sun">☀</span>
+                    <span class="theme-icon moon">☾</span>
+                </button>
             </div>
         </div>
     </header>
@@ -67,7 +75,7 @@
                 </select>
                 
                 <label for="file-upload" class="upload-btn">
-                    📤 Upload MD Files
+                     Upload MD Files
                     <input type="file" id="file-upload" multiple accept=".md" style="display: none;">
                 </label>
             </div>

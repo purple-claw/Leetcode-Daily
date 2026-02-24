@@ -9,14 +9,131 @@ let currentFilters = {
     sort: 'number_asc'
 };
 
+// Easter egg trackers
+let titleClickCount = 0;
+let konamiCode = [];
+const konamiSequence = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
+    initializeTheme();
     loadStats();
     loadTags();
     loadProblems();
     setupEventListeners();
     handleRouting();
+    setupEasterEggs();
 });
+
+// Theme Management
+function initializeTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    
+    // Easter egg: shake the page on theme switch
+    document.body.classList.add('shake');
+    setTimeout(() => document.body.classList.remove('shake'), 500);
+}
+
+// Easter Eggs Setup
+function setupEasterEggs() {
+    // Title click counter
+    const title = document.getElementById('main-title');
+    if (title) {
+        title.addEventListener('click', () => {
+            titleClickCount++;
+            
+            if (titleClickCount === 5) {
+                title.textContent = '🎉 You found an easter egg! 🎉';
+                title.classList.add('rainbow');
+                setTimeout(() => {
+                    title.textContent = 'Not your typical Leetcode';
+                    title.classList.remove('rainbow');
+                    titleClickCount = 0;
+                }, 3000);
+            } else if (titleClickCount === 3) {
+                title.classList.add('shake');
+                setTimeout(() => title.classList.remove('shake'), 500);
+            }
+        });
+    }
+    
+    // Konami code
+    document.addEventListener('keydown', (e) => {
+        konamiCode.push(e.key);
+        konamiCode.splice(-konamiSequence.length - 1, konamiCode.length - konamiSequence.length);
+        
+        if (konamiCode.join('').includes(konamiSequence.join(''))) {
+            activateKonamiCode();
+            konamiCode = [];
+        }
+    });
+    
+    // Secret keyword in search
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            if (e.target.value.toLowerCase() === 'konami') {
+                activateKonamiCode();
+                e.target.value = '';
+            } else if (e.target.value.toLowerCase() === 'matrix') {
+                activateMatrixMode();
+                e.target.value = '';
+            }
+        });
+    }
+    
+    // Double click on stats for surprise
+    document.querySelectorAll('.stat-box').forEach(box => {
+        box.addEventListener('dblclick', () => {
+            box.style.transform = 'rotate(360deg) scale(1.2)';
+            setTimeout(() => {
+                box.style.transform = '';
+            }, 500);
+        });
+    });
+}
+
+function activateKonamiCode() {
+    const statusDiv = document.getElementById('upload-status');
+    statusDiv.className = 'upload-status';
+    statusDiv.innerHTML = '<strong>🎮 Konami Code Activated! You are a true developer! 🎮</strong><br>Extra lives granted: ∞';
+    statusDiv.style.display = 'block';
+    
+    // Rainbow effect on all cards
+    document.querySelectorAll('.problem-card').forEach(card => {
+        card.classList.add('rainbow');
+    });
+    
+    setTimeout(() => {
+        statusDiv.style.display = 'none';
+        document.querySelectorAll('.problem-card').forEach(card => {
+            card.classList.remove('rainbow');
+        });
+    }, 5000);
+}
+
+function activateMatrixMode() {
+    const statusDiv = document.getElementById('upload-status');
+    statusDiv.className = 'upload-status';
+    statusDiv.innerHTML = '<strong>🟢 Matrix Mode Activated! Follow the white rabbit... 🐰</strong>';
+    statusDiv.style.display = 'block';
+    
+    // Change theme to dark
+    document.documentElement.setAttribute('data-theme', 'dark');
+    localStorage.setItem('theme', 'dark');
+    
+    setTimeout(() => {
+        statusDiv.style.display = 'none';
+    }, 3000);
+}
 
 // Event Listeners
 function setupEventListeners() {
@@ -27,6 +144,7 @@ function setupEventListeners() {
     document.getElementById('file-upload').addEventListener('change', handleFileUpload);
     document.getElementById('prev-btn').addEventListener('click', () => changePage(-1));
     document.getElementById('next-btn').addEventListener('click', () => changePage(1));
+    document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
     
     // Handle browser back/forward
     window.addEventListener('popstate', handleRouting);
