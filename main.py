@@ -4,10 +4,11 @@ from pathlib import Path
 from datetime import datetime
 from typing import List, Optional
 
-from fastapi import FastAPI, File, UploadFile, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 import yaml
 
 # Constants
@@ -27,9 +28,14 @@ KNOWN_TAGS = [
 
 app = FastAPI(
     title="LeetCode Daily Series",
-    description="Browse, upload, and explore LeetCode problem solutions",
+    description="Browse, edit, and explore LeetCode problem solutions",
     version="2.0.0"
 )
+
+
+class MarkdownEditorPayload(BaseModel):
+    markdown: str
+    filename: Optional[str] = None
 
 # CORS middleware
 app.add_middleware(
@@ -326,38 +332,29 @@ async def get_tags():
     return JSONResponse(content={"tags": all_tags})
 
 
-@app.post("/api/upload")
-async def upload_problems(files: List[UploadFile] = File(...)):
-    """Upload one or more markdown files."""
-    uploaded = []
-    errors = []
-    
-    for file in files:
-        if not file.filename.endswith('.md'):
-            errors.append(f"{file.filename}: Not a markdown file")
-            continue
-        
-        try:
-            content = await file.read()
-            raw = content.decode('utf-8')
-            problem = parse_markdown(raw, file.filename)
-            
-            # Save to disk
-            file_path = save_problem_to_disk(problem)
-            
-            uploaded.append({
-                "filename": file.filename,
-                "title": problem["title"],
-                "path": file_path,
-                "slug": problem["slug"]
-            })
-        except Exception as e:
-            errors.append(f"{file.filename}: {str(e)}")
-    
+@app.post("/api/editor/save")
+async def save_markdown_from_editor(payload: MarkdownEditorPayload):
+    """Save markdown pasted in editor to disk."""
+    raw = (payload.markdown or "").strip()
+    if not raw:
+        raise HTTPException(status_code=400, detail="Markdown content is empty")
+
+    filename = (payload.filename or "").strip()
+    if filename and not filename.endswith(".md"):
+        filename = f"{filename}.md"
+    if not filename:
+        filename = "editor.md"
+
+    try:
+        problem = parse_markdown(raw, filename)
+        file_path = save_problem_to_disk(problem)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
     return JSONResponse(content={
-        "success": len(uploaded),
-        "uploaded": uploaded,
-        "errors": errors
+        "title": problem["title"],
+        "slug": problem["slug"],
+        "path": file_path
     })
 
 

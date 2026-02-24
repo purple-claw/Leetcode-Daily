@@ -102,8 +102,8 @@ function setupEasterEggs() {
 }
 
 function activateKonamiCode() {
-    const statusDiv = document.getElementById('upload-status');
-    statusDiv.className = 'upload-status';
+    const statusDiv = document.getElementById('status-message');
+    statusDiv.className = 'status-message';
     statusDiv.innerHTML = '<strong>🎮 Konami Code Activated! You are a true developer! 🎮</strong><br>Extra lives granted: ∞';
     statusDiv.style.display = 'block';
     
@@ -121,8 +121,8 @@ function activateKonamiCode() {
 }
 
 function activateMatrixMode() {
-    const statusDiv = document.getElementById('upload-status');
-    statusDiv.className = 'upload-status';
+    const statusDiv = document.getElementById('status-message');
+    statusDiv.className = 'status-message';
     statusDiv.innerHTML = '<strong>🟢 Matrix Mode Activated! Follow the white rabbit... 🐰</strong>';
     statusDiv.style.display = 'block';
     
@@ -141,7 +141,9 @@ function setupEventListeners() {
     document.getElementById('difficulty-filter').addEventListener('change', handleFilterChange);
     document.getElementById('tag-filter').addEventListener('change', handleFilterChange);
     document.getElementById('sort-select').addEventListener('change', handleFilterChange);
-    document.getElementById('file-upload').addEventListener('change', handleFileUpload);
+    document.getElementById('toggle-editor').addEventListener('click', toggleEditorPanel);
+    document.getElementById('editor-clear').addEventListener('click', clearEditor);
+    document.getElementById('editor-save').addEventListener('click', handleEditorSave);
     document.getElementById('prev-btn').addEventListener('click', () => changePage(-1));
     document.getElementById('next-btn').addEventListener('click', () => changePage(1));
     document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
@@ -184,6 +186,7 @@ async function loadTags() {
         const data = await response.json();
         
         const tagSelect = document.getElementById('tag-filter');
+        tagSelect.innerHTML = '<option value="">All Tags</option>';
         data.tags.forEach(tag => {
             const option = document.createElement('option');
             option.value = tag;
@@ -442,65 +445,55 @@ function handleRouting() {
     }
 }
 
-// File Upload
-async function handleFileUpload(event) {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
-    
-    const formData = new FormData();
-    for (let file of files) {
-        formData.append('files', file);
+function toggleEditorPanel() {
+    const panel = document.getElementById('editor-panel');
+    const toggleBtn = document.getElementById('toggle-editor');
+    const isVisible = panel.style.display !== 'none';
+
+    panel.style.display = isVisible ? 'none' : 'block';
+    toggleBtn.textContent = isVisible ? 'Markdown Editor' : 'Hide Editor';
+}
+
+function clearEditor() {
+    document.getElementById('markdown-editor').value = '';
+    document.getElementById('editor-filename').value = '';
+}
+
+async function handleEditorSave() {
+    const rawMarkdown = document.getElementById('markdown-editor').value.trim();
+    const filename = document.getElementById('editor-filename').value.trim();
+
+    if (!rawMarkdown) {
+        showError('Markdown content is empty. Paste some content first.');
+        return;
     }
-    
+
     showLoading(true);
-    
+
     try {
-        const response = await fetch('/api/upload', {
+        const response = await fetch('/api/editor/save', {
             method: 'POST',
-            body: formData
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                markdown: rawMarkdown,
+                filename: filename || null
+            })
         });
-        
+
         const result = await response.json();
-        
-        const statusDiv = document.getElementById('upload-status');
-        
-        if (result.success > 0) {
-            statusDiv.className = 'upload-status';
-            statusDiv.innerHTML = `
-                <strong>✅ Successfully uploaded ${result.success} problem(s)!</strong>
-                ${result.uploaded.map(u => `<div style="margin-top: 0.5rem;">📄 ${u.title} → ${u.path}</div>`).join('')}
-            `;
-            statusDiv.style.display = 'block';
-            
-            // Reload problems
-            setTimeout(() => {
-                loadStats();
-                loadProblems();
-            }, 1000);
+        if (!response.ok) {
+            throw new Error(result.detail || 'Failed to save markdown');
         }
-        
-        if (result.errors.length > 0) {
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'upload-status error';
-            errorDiv.style.marginTop = '1rem';
-            errorDiv.innerHTML = `
-                <strong>⚠️ ${result.errors.length} error(s):</strong>
-                ${result.errors.map(e => `<div>• ${e}</div>`).join('')}
-            `;
-            statusDiv.appendChild(errorDiv);
-        }
-        
-        // Clear file input
-        event.target.value = '';
-        
-        // Hide status after 5 seconds
-        setTimeout(() => {
-            statusDiv.style.display = 'none';
-        }, 5000);
-        
+
+        showSuccess(`Saved: ${result.title} → ${result.path}`);
+        loadStats();
+        loadTags();
+        loadProblems();
     } catch (error) {
-        console.error('Upload failed:', error);
-        showError('Upload failed. Please try again.');
+        console.error('Save failed:', error);
+        showError(error.message || 'Failed to save markdown.');
     } finally {
         showLoading(false);
     }
@@ -512,14 +505,25 @@ function showLoading(show) {
 }
 
 function showError(message) {
-    const statusDiv = document.getElementById('upload-status');
-    statusDiv.className = 'upload-status error';
+    const statusDiv = document.getElementById('status-message');
+    statusDiv.className = 'status-message error';
     statusDiv.innerHTML = `<strong>❌ ${message}</strong>`;
     statusDiv.style.display = 'block';
     
     setTimeout(() => {
         statusDiv.style.display = 'none';
     }, 3000);
+}
+
+function showSuccess(message) {
+    const statusDiv = document.getElementById('status-message');
+    statusDiv.className = 'status-message';
+    statusDiv.innerHTML = `<strong>✅ ${message}</strong>`;
+    statusDiv.style.display = 'block';
+
+    setTimeout(() => {
+        statusDiv.style.display = 'none';
+    }, 4000);
 }
 
 function escapeHtml(text) {

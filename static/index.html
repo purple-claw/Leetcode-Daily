@@ -17,7 +17,7 @@
                 <div class="header-text">
                     <h1 id="main-title">Not your typical Leetcode</h1>
                     <p>A simpler Version, Built for myself to revise before Interviews(I Know I'm Not Haha..), But later decided to Give it to others, Ofcourse for Free</p>
-                    <p>Browse, upload, and explore optimised LeetCode problem solutions</p>
+                    <p>Browse, edit, and explore optimised LeetCode problem solutions</p>
                     <p class="credits">Thanks to Claude Sonnet, for reducing my Headaches with the Backend Filter Implementation</p>
                 </div>
                 <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
@@ -50,7 +50,7 @@
             </div>
         </div>
 
-        <!-- Filters and Upload -->
+        <!-- Filters and Editor -->
         <div class="filters-section">
             <div class="filters-row">
                 <input type="text" id="search-input" class="filter-input" placeholder="Search by title, number, or tag...">
@@ -73,16 +73,28 @@
                     <option value="difficulty_desc">Difficulty ↓</option>
                     <option value="date_desc">Date ↓</option>
                 </select>
-                
-                <label for="file-upload" class="upload-btn">
-                     Upload MD Files
-                    <input type="file" id="file-upload" multiple accept=".md" style="display: none;">
-                </label>
+
+                <button id="toggle-editor" class="editor-toggle-btn" type="button">Markdown Editor</button>
+            </div>
+
+            <div id="editor-panel" class="editor-panel" style="display: none;">
+                <div class="editor-header">
+                    <h3>Paste Markdown</h3>
+                    <p>Paste markdown content and save it directly into the problem library.</p>
+                </div>
+                <div class="editor-actions-top">
+                    <input type="text" id="editor-filename" class="filter-input" placeholder="Optional filename (e.g. 0001-two-sum.md)">
+                </div>
+                <textarea id="markdown-editor" class="markdown-editor" placeholder="Paste markdown content here..."></textarea>
+                <div class="editor-actions">
+                    <button id="editor-clear" class="editor-action secondary" type="button">Clear</button>
+                    <button id="editor-save" class="editor-action primary" type="button">Save Markdown</button>
+                </div>
             </div>
         </div>
 
-        <!-- Upload Status -->
-        <div id="upload-status" class="upload-status" style="display: none;"></div>
+        <!-- Status -->
+        <div id="status-message" class="status-message" style="display: none;"></div>
 
         <!-- Problems Grid / Detail View -->
         <div id="problems-container">

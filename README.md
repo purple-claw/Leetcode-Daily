@@ -1,13 +1,13 @@
 # LeetCode Daily Competitive Series
 
-A modern FastAPI web application for browsing, uploading, and exploring LeetCode problem explanations written in Markdown. Because apparently a simple file browser wasn't good enough.
+A modern FastAPI web application for browsing, editing, and exploring LeetCode problem explanations written in Markdown. Because apparently a simple file browser wasn't good enough.
 
 ## Features That Definitely Justify The Development Time
 
 | Feature | What It Actually Does |
 |---|---|
 | **Smart Search** | Search problems by title, number, or tags while pretending regex doesn't exist |
-| **File Upload** | Upload markdown files instead of just dropping them in a folder like a normal person |
+| **Markdown Editor** | Paste markdown directly in-app and save it without file upload dialogs |
 | **Auto-Classification** | Guesses what your problem is about because you couldn't be bothered to add metadata |
 | **Advanced Filters** | Filter by difficulty and tags so you can avoid the Hard problems |
 | **Pagination** | Shows 9 problems per page to make you feel like you're making progress |
@@ -87,9 +87,9 @@ problems/
   0121-best-time-to-buy-sell-stock.md
 ```
 
-## Uploading Files Like It's 1999
+## Markdown Editor (Paste + Save)
 
-Use the Upload Problems panel in the sidebar to add files during runtime. This feature exists because dragging files into a folder was too straightforward. Uploaded files merge with existing ones and deduplicate by slug, which is fancy talk for "the newer one wins."
+Use the Markdown Editor panel in the UI to paste raw markdown and save it instantly. The backend parses metadata/frontmatter, classifies tags, and stores the file in the correct folder.
 
 ## Permalinks That Nobody Uses
 
@@ -139,7 +139,7 @@ Because FastAPI gives you interactive docs at `/docs`, but you wanted them in th
 - `GET /api/problems/{slug}` - Get a single problem
 - `GET /api/stats` - Statistics for your dashboard addiction
 - `GET /api/tags` - All available tags
-- `POST /api/upload` - Upload markdown files
+- `POST /api/editor/save` - Save markdown pasted from the editor
 - `GET /health` - For load balancers that don't exist yet
 
 ## License
